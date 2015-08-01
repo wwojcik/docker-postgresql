@@ -2,29 +2,34 @@ FROM gliderlabs/alpine:latest
 
 MAINTAINER Wojciech Wójcik <wojtaswojcik@gmail.com>
 
-ENV PG_VERSION=9.4 \
-    PG_USER=postgres \
-    PG_HOME="/var/lib/postgresql"
-
-
-ENV PGDATA=${PG_HOME}/${PG_VERSION}/data
 RUN apk --update add \
     postgresql \
     postgresql-contrib \
     openssl \
     sudo \
-    && mkdir -p ${PGDATA} /var/run/postgresql\
-    && chown -R postgres:postgres ${PG_HOME} /var/run/postgresql
+    wget \
+    bash \
+	&& wget -O /usr/local/bin/gosu --no-check-certificate "https://github.com/tianon/gosu/releases/download/1.4/gosu-amd64" \
+	&& chmod +x /usr/local/bin/gosu
+
+ENV LANG en_US.utf8
+
+RUN mkdir /docker-entrypoint-initdb.d
+
+ENV PG_MAJOR 9.4
+ENV PG_VERSION 9.4.4
+
+RUN mkdir -p /var/run/postgresql && chown -R postgres /var/run/postgresql
+
+ENV PATH /var/lib/postgresql/$PG_MAJOR/bin:$PATH
+ENV PGDATA /var/lib/postgresql/data
+
+VOLUME /var/lib/postgresql/data
+
+COPY docker-entrypoint.sh /
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
 EXPOSE 5432
 
-USER postgres
-
-RUN ["initdb"]
-
-ADD config/postgresql.conf ${PGDATA}/postgresql.conf
-ADD config/pg_hba.conf ${PGDATA}/pg_hba.conf
-VOLUME ["/var/lib/postgresql/9.4/data"]
-CMD /etc/init.d/postgresql start
-#CMD /usr/bin/pg_ctl start -s -w -t 10 -l /var/lib/postgresql/9.4/data/postmaster.log -D /var/lib/postgresql/9.4/data
-
+CMD ["postgres"]
