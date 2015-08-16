@@ -10,7 +10,8 @@ RUN apk --update add \
     wget \
     bash \
 	&& wget -O /usr/local/bin/gosu --no-check-certificate "https://github.com/tianon/gosu/releases/download/1.4/gosu-amd64" \
-	&& chmod +x /usr/local/bin/gosu
+	&& chmod +x /usr/local/bin/gosu \
+	&& rm -rf /var/cache/apk/*
 
 ENV LANG en_US.utf8
 
